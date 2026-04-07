@@ -1,4 +1,3 @@
-![PyRevKit Project Logo](PyRevKit_logo.png)
 <img src="PyRevKit_logo.png" alt="Alt Text" style="width:65%; height:auto;">
 
 # PyRevKit
