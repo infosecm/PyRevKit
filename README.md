@@ -1,4 +1,4 @@
-<img src="PyRevKit_logo.png" alt="Alt Text" style="width:50%; height:auto;">
+<img src="PyRevKit_logo.png" alt="Alt Text" style="width:65%; height:auto;">
 
 # PyRevKit
 
